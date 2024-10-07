@@ -230,6 +230,135 @@ footer {
     transition: background-color 0.3s ease;
 }
 
+/* Carousel styles */
+.carousel-container {
+    width: 100%;
+    max-width: 1200px; /* Increased max-width */
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: #f5f5f5;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* Set aspect ratio using padding-bottom */
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-slide {
+    flex: 0 0 100%;
+    min-width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.carousel-slide img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Change to 'cover' if you want to fill completely */
+    background-color: #f5f5f5;
+}
+
+.carousel-slide p {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    text-align: center;
+    font-size: 16px;
+}
+
+.carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+    z-index: 10;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-button:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.carousel-button.prev {
+    left: 20px;
+}
+
+.carousel-button.next {
+    right: 20px;
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.carousel-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: background-color 0.3s;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+.carousel-dot.active {
+    background: white;
+}
+
+.carousel-play-pause {
+    bottom: 20px;  /* Adjust vertical position */
+    right: 20px;   /* Adjust horizontal position */
+}
+
+.loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-size: 18px;
+}
+
+.error {
+    color: #ff4444;
+    text-align: center;
+    padding: 20px;
+}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -254,5 +383,19 @@ footer {
     .owner-photo {
         width: 60px;
         height: 60px;
+    }
+    .carousel-container {
+        padding-bottom: 75%; /* 4:3 aspect ratio for mobile */
+    }
+
+    .carousel-button {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+
+    .carousel-slide p {
+        padding: 10px;
+        font-size: 14px;
     }
 }

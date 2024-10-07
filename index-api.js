@@ -114,7 +114,47 @@ class GoogleDriveImageFetcher {
     constructor(apiKey) {
         this.API_KEY = apiKey;
         this.BASE_URL = 'https://www.googleapis.com/drive/v3';
+        this.currentSlide = 0;
+        this.autoPlayInterval = null;
+        this.isPlaying = true;
+        this.autoPlayDelay = 4000; // 4 seconds between slides
     }
+
+    startAutoPlay() {
+        if (this.autoPlayInterval) return;
+        
+        this.isPlaying = true;
+        this.updatePlayPauseButton();
+        this.autoPlayInterval = setInterval(() => {
+            this.nextSlide();
+        }, this.autoPlayDelay);
+    }
+
+    stopAutoPlay() {
+        if (this.autoPlayInterval) {
+            clearInterval(this.autoPlayInterval);
+            this.autoPlayInterval = null;
+        }
+        this.isPlaying = false;
+        this.updatePlayPauseButton();
+    }
+
+    toggleAutoPlay() {
+        if (this.isPlaying) {
+            this.stopAutoPlay();
+        } else {
+            this.startAutoPlay();
+        }
+    }
+
+    updatePlayPauseButton() {
+        const button = document.querySelector('.carousel-play-pause');
+        if (button) {
+            button.innerHTML = this.isPlaying ? '⏸' : '▶';
+            button.setAttribute('title', this.isPlaying ? 'Pause' : 'Play');
+        }
+    }
+
 
     async fetchImagesFromFolder(folderId) {
         try {
@@ -169,6 +209,37 @@ class GoogleDriveImageFetcher {
         }
     }
 
+    createCarousel(images) {
+        return `
+            <div class="carousel-container">
+                <button class="carousel-button prev" onclick="imageFetcher.prevSlide()">❮</button>
+                <button class="carousel-button next" onclick="imageFetcher.nextSlide()">❯</button>
+                <button class="carousel-play-pause" onclick="imageFetcher.toggleAutoPlay()" title="Pause">⏸</button>
+                <div class="carousel-track" style="transform: translateX(0%)">
+                    ${images.map(image => `
+                        <div class="carousel-slide">
+                            <img 
+                                src="${image.downloadUrl}" 
+                                alt="${image.name}"
+                                onerror="this.onerror=null; this.src='${image.thumbnailUrl || ''}'"
+                                
+                            />
+                            
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="carousel-dots">
+                    ${images.map((_, index) => `
+                        <div class="carousel-dot ${index === 0 ? 'active' : ''}" 
+                             onclick="imageFetcher.goToSlide(${index})">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+// <p>${image.name}</p>
+
     async displayImages(containerId, folderId) {
         const container = document.getElementById(containerId);
         if (!container) {
@@ -177,41 +248,66 @@ class GoogleDriveImageFetcher {
 
         container.innerHTML = '<div>Loading images...</div>';
 
+        
         try {
-            console.log('Starting image fetch for folder:', folderId);
             const images = await this.fetchImagesFromFolder(folderId);
             
             if (images.length === 0) {
                 container.innerHTML = `
-                    <div>
+                    <div class="error">
                         <p>No images found in the folder. Please check:</p>
                         <ul>
-                            <li>The folder ID is correct: ${folderId}</li>
-                            <li>The folder contains image files (JPG, PNG, GIF, etc.)</li>
-                            <li>The folder is shared publicly or has proper permissions</li>
-                            <li>Check browser console for detailed API response</li>
+                            <li>The folder ID is correct</li>
+                            <li>The folder contains image files</li>
+                            <li>The folder has proper permissions</li>
                         </ul>
                     </div>`;
                 return;
             }
 
-            container.innerHTML = images.map(image => `
-                <div class="image-container" style="margin: 10px; display: inline-block;">
-                    <img 
-                        src="${image.downloadUrl}" 
-                        alt="${image.name}"
-                        style="max-width: 200px; height: auto;"
-                        onerror="this.onerror=null; this.src='${image.thumbnailUrl || ''}'"
-                    />
-                    <p style="text-align: center;">${image.name}</p>
-                    <p style="font-size: 12px; color: #666;">${image.mimeType}</p>
-                </div>
-            `).join('');
+            container.innerHTML = this.createCarousel(images);
+            this.totalSlides = images.length;
+
+            // Start auto-play after images are loaded
+            this.startAutoPlay();
+
+            // Pause auto-play when user interacts with the carousel
+            container.addEventListener('mouseenter', () => this.stopAutoPlay());
+            container.addEventListener('mouseleave', () => {
+                this.startAutoPlay();
+            });
         } catch (error) {
-            container.innerHTML = `<div>Error loading images: ${error.message}</div>`;
-            console.error('Display error:', error);
+            container.innerHTML = `<div class="error">Error loading images: ${error.message}</div>`;
         }
     }
+
+    updateCarousel() {
+        const track = document.querySelector('.carousel-track');
+        if (track) {
+            track.style.transform = `translateX(-${this.currentSlide * 100}%)`;
+            
+            // Update dots
+            document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
+                dot.classList.toggle('active', index === this.currentSlide);
+            });
+        }
+    }
+
+    nextSlide() {
+        this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+        this.updateCarousel();
+    }
+
+    prevSlide() {
+        this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+        this.updateCarousel();
+    }
+
+    goToSlide(index) {
+        this.currentSlide = index;
+        this.updateCarousel();
+    }
+
 }
 
 // Usage example:
